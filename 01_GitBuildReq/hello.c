@@ -4,7 +4,7 @@
 int
 main(void)
 {
-    size_t str_len = 3;
+    size_t str_len = 20;
     char *buffer = (char *) malloc((str_len + 1) * sizeof(*buffer));
     if (buffer == NULL){
         fprintf(stderr, "Cannot allocate memory!\n");
