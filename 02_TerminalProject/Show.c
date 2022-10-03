@@ -111,6 +111,17 @@ get_file_data(FILE *file)
     return res;
 }
 
+void
+free_file_data(File_data *file_data)
+{
+    if (file_data != NULL){
+        free(file_data->buf);
+        free(file_data->rows);
+        free(file_data->rows_len);
+    }
+    free(file_data);
+}
+
 int
 min(int a, int b)
 {
@@ -242,6 +253,9 @@ main(int argc, char *argv[])
     }
 
     endwin();
+
+    free_file_data(file_data);
+    free(win_set);
 
     return 0;
 }
