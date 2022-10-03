@@ -10,7 +10,10 @@ enum
     ARGS_QUANT = 1,
     OFFSET_LINES_ = 3,
     OFFSET_COLS_ = 3,
-    QUIT_KEY_ = 27
+    H_BORDERS = 2,
+    W_BORDERS = 2,
+    ROWNUMS_OFFSET = 3,
+    QUIT_KEY_ = 27,
 };
 
 int
@@ -126,6 +129,15 @@ max(int a, int b)
     return b;
 }
 
+int
+abs(int a)
+{
+    if (a > 0){
+        return a;
+    }
+    return -a;
+}
+
 void
 update_win(Window_settings *win_set, char c, File_data *file_data)
 {
@@ -134,23 +146,30 @@ update_win(Window_settings *win_set, char c, File_data *file_data)
 
     // calculating rows position based on commands
     size_t rows_quant = file_data->rows_quant;
+    int num_width = digits_quant(rows_quant - 1);
     size_t max_row_len = file_data->max_row_len;
     int H = win_set->H;
     int W = win_set->W;
     int n = win_set->n;
     int m = win_set->m;
+
+    // for calculating
+    int work_H = H - H_BORDERS;
+    int work_W = W - W_BORDERS - (ROWNUMS_OFFSET + num_width);
+    int limit_H = rows_quant <= work_H ? 0 : rows_quant - work_H;
+    int limit_W = max_row_len <= work_W ? 0 : max_row_len - work_W;
     int delta_1 = 1;
-    int delta_2 = H - 2;
+    int delta_2 = work_H;
     switch (c) {
         // delta_1
         case ' ':
-        case 10:
-        case (char) KEY_DOWN: n = min(n + delta_1, rows_quant - 1); break;
-        case (char) KEY_RIGHT: m = min(m + delta_1, max_row_len - 1); break;
+        case '\n':
+        case (char) KEY_DOWN: n = min(n + delta_1, limit_H); break;
+        case (char) KEY_RIGHT: m = min(m + delta_1, limit_W); break;
         case (char) KEY_UP: n = max(n - delta_1, 0); break;
         case (char) KEY_LEFT: m = max(m - delta_1, 0); break;
         // delta_2
-        case (char) KEY_NPAGE: n = min(n + delta_2, rows_quant - 1); break;
+        case (char) KEY_NPAGE: n = min(n + delta_2, limit_H); break;
         case (char) KEY_PPAGE: n = max(n - delta_2, 0); break;
         default: break;
     }
@@ -160,8 +179,7 @@ update_win(Window_settings *win_set, char c, File_data *file_data)
     // drawing rows
     size_t *rows_len = file_data->rows_len;
     char **rows = file_data->rows;
-    int num_width = digits_quant(rows_quant - 1);
-    for (int i = 0; i < H - 2 && i + n < rows_quant; ++i){
+    for (int i = 0; i < work_H && i + n < rows_quant; ++i){
         int row_num = i + n + 1;
         if (m > rows_len[i + n]){
             mvwprintw(win, i + 1, 1, " %*d| %s\n", num_width, row_num, "");
