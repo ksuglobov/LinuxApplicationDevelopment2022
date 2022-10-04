@@ -8,7 +8,7 @@
 enum
 {
     ARGS_QUANT = 1,
-    OFFSET_LINES_ = 3,
+    OFFSET_LINES_ = 2,
     OFFSET_COLS_ = 3,
     H_BORDERS = 2,
     W_BORDERS = 2,
@@ -150,13 +150,15 @@ abs(int a)
 }
 
 void
-update_win(Window_settings *win_set, char c, File_data *file_data)
+update_win(Window_settings *win_set, int c, File_data *file_data)
 {
     WINDOW *win = win_set->win;
     werase(win);
 
     // calculating rows position based on commands
     size_t rows_quant = file_data->rows_quant;
+    size_t *rows_len = file_data->rows_len;
+    char **rows = file_data->rows;
     int num_width = digits_quant(rows_quant - 1);
     size_t max_row_len = file_data->max_row_len;
     int H = win_set->H;
@@ -175,21 +177,22 @@ update_win(Window_settings *win_set, char c, File_data *file_data)
         // delta_1
         case ' ':
         case '\n':
-        case (char) KEY_DOWN: n = min(n + delta_1, limit_H); break;
-        case (char) KEY_RIGHT: m = min(m + delta_1, limit_W); break;
-        case (char) KEY_UP: n = max(n - delta_1, 0); break;
-        case (char) KEY_LEFT: m = max(m - delta_1, 0); break;
+        case KEY_DOWN: n = min(n + delta_1, limit_H); break;
+        case KEY_RIGHT: m = min(m + delta_1, limit_W); break;
+        case KEY_UP: n = max(n - delta_1, 0); break;
+        case KEY_LEFT: m = max(m - delta_1, 0); break;
         // delta_2
-        case (char) KEY_NPAGE: n = min(n + delta_2, limit_H); break;
-        case (char) KEY_PPAGE: n = max(n - delta_2, 0); break;
+        case KEY_NPAGE: n = min(n + delta_2, limit_H); break;
+        case KEY_PPAGE: n = max(n - delta_2, 0); break;
+        // home & end
+        case KEY_HOME: n = 0; m = 0; wmove(win, 1, 0); break;
+        case KEY_END: n = limit_H; m = rows_len[rows_quant - 1] <= work_W ? 0 : rows_len[rows_quant - 1] - work_W; break;
         default: break;
     }
     win_set->n = n;
     win_set->m = m;
 
     // drawing rows
-    size_t *rows_len = file_data->rows_len;
-    char **rows = file_data->rows;
     for (int i = 0; i < work_H && i + n < rows_quant; ++i){
         int row_num = i + n + 1;
         if (m > rows_len[i + n]){
@@ -198,7 +201,9 @@ update_win(Window_settings *win_set, char c, File_data *file_data)
             mvwprintw(win, i + 1, 1, " %*d| %s\n", num_width, row_num, rows[i + n] + sizeof(**rows) * m);
         }
     }
-
+    for (int i = rows_quant - n; i < work_H; ++i) {
+        mvwprintw(win, i + 1, 1, "%s\n", "");
+    }
     box(win, 0, 0);
     wrefresh(win);
 }
@@ -226,10 +231,15 @@ main(int argc, char *argv[])
     noecho();
     cbreak();
     set_escdelay(0);
-    // curs_set(0);
+    curs_set(0);
 
     // drawing around window
-    printw("%s", argv[1]);
+    move(0, 0);
+    attron(A_STANDOUT);
+    addstr("My Viewer\n");
+    attroff(A_STANDOUT);
+    move(1, 3);
+    printw("filename: %s, rows: %ld, size %ld", argv[1], file_data->rows_quant, file_data->file_size);
     refresh();
 
     // setting window
@@ -245,9 +255,9 @@ main(int argc, char *argv[])
     win_set->H = H;
     win_set->W = W;
 
-    char c = 0;
+    int c = 0;
     // initial "update" == initial drawing in window
-    update_win(win_set, c, file_data);
+    update_win(win_set, c, file_data); 
     while ((c = wgetch(win)) != QUIT_KEY_) {
         update_win(win_set, c, file_data);
     }
