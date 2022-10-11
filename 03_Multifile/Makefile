@@ -15,20 +15,20 @@ ARGS_2 = "lorem"
 ARGS_3 = "lorem ipsum dolor"
 
 
-all:	prog prog-a prog-so
+all: prog prog-a prog-so
 
-prog:	const.o fun.o prog.o
+prog: const.o fun.o prog.o
 
-prog-a:	prog.o liboutput-static.a
+prog-a: prog.o liboutput-static.a
 	cc -L. $< -loutput-static -o $@
 
-prog-so:	prog.o liboutput.so
+prog-so: prog.o liboutput.so
 	cc -L. $< -loutput -o $@
 
-liboutput-static.a:	fun.o const.o
+liboutput-static.a: fun.o const.o
 	ar -rcs $@ $^
 
-liboutput.so:	fun.o const.o
+liboutput.so: fun.o const.o
 	cc -shared $^ -o $@
 
 fun.o: outlib.h
@@ -47,5 +47,5 @@ test-%:
 clean:
 	rm -f $(TRASH) $(OUTPUTS)
 
-distclean:	clean
+distclean: clean
 	rm -rf $(GENERATES)
