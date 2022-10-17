@@ -36,3 +36,6 @@ do
 		(( col++ )) 
     fi
 done
+
+# shuffling hex chars
+shuffled_text=$(echo -e "$indexed_text" | shuf)
