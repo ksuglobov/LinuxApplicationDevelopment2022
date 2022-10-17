@@ -14,13 +14,13 @@ hex_text=$(od -An -t x1)
 row=0
 col=0
 indexed_text=''
-all_lines=0
+lines_quant=0
 for c in $hex_text
 do
     if [ $c = "0a" ]
 	then 
         (( row++ ))
-		(( all_lines++ ))
+		(( lines_quant++ ))
 		col=0
     else
 	    if ! [ $c = "20" ]
@@ -39,3 +39,16 @@ done
 
 # shuffling hex chars
 shuffled_text=$(echo -e "$indexed_text" | shuf)
+
+# printing chars with 'delta' delay
+tput clear
+echo "$shuffled_text" |
+while read row col c
+do
+	sleep $delta
+	tput cup $row $col
+	echo -e "\x$c"
+done
+
+# put cursor right after output
+tput cup ${lines_quant} 0
