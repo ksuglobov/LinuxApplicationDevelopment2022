@@ -1,0 +1,15 @@
+set pagination off
+set logging overwrite on
+set logging file gdb_script_1.out
+set logging on
+
+break range.c:42 if i % 5 == 0
+  command 1
+  printf "@@@%d %d %d %d\n", start, end, step, i
+  continue
+end
+
+run 1 12 > /dev/null
+
+set logging off
+quit

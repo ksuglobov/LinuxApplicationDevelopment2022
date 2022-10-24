@@ -1,0 +1,17 @@
+set pagination off
+set logging overwrite on
+set logging file gdb_script_2.out
+set logging on
+
+set $var = 1
+
+break range.c:42 if ($var >= 28 & $var++ <= 35)
+  command 1
+  printf "@@@%d %d %d %d\n", start, end, step, i
+  continue
+end
+
+run -100 100 3 > /dev/null
+
+set logging off
+quit
